@@ -1,6 +1,9 @@
+"use strict";
+
 const axios = require('axios');
 const readline = require('readline');
 const fs = require('fs');
+require('dotenv').config();
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -18,11 +21,12 @@ const welcomeMessages = [
   "Awesome to have you join us! What's your favorite tech stack?"
 ];
 
-
-const da2_cookie = 'M8W2z5HKelL98yIB0MhpE'
-const da3_cookie = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjQ5NTQ2NjYuMjEsInVzZXJJZCI6Ik04VzJ6NUhLZWxMOTh5SUIwTWhwRSIsInJvbGVzIjpbXSwiaWF0IjoxNzI0OTUzNzY2LCJhdWQiOiJEYWlseSIsImlzcyI6IkRhaWx5IEFQSSJ9.HhPRZR7e6p_fQZzvr1j0EhOFhhTw9QqQeWGWUNgsB7MHnNR-lzBqrY5BaE7aluRtjFqoGKghh85PNv0w7fWKb81H1NM4M3DXRCc1-wu4z_Pd6-6wfhgS6O05_WFTRlXgwe8ig3I5yP2t_rycatzJTktF32Bm6eidyM5IXiuf1AN5rgPS9l9uM2Ku4pO7YPghBxNyZh3XYjq9p0vC5u8F8AjrkRseApA6k1XwbKj8bVxfH1FKtGEmeiU6zSGMI7KJ55KxGkqy4fn-63dl5Z2Fd3DVKRaEyDFXIMP8nKc2eAxEmlGY76oWHcxX2u0AsUT7UZCQak1sAbVC3b8J_1lAuA.WHz3muaSOMG4GZ%2F8G5sn%2Fim%2F%2B9jeyLysn7luqYL2NN8'
-const das_cookie = '368d8f5a-ee96-4e65-86dc-5acc40a9eb79'
-const session_cookie = 'MTcyMzg0MzMyN3xJeElUNjdqd0J3TmdZMVJ6U3NUVFZFQjdfMFBMT1podjdCRHlkVU5YZE4wZ0p2cUNkREt2dDNhRHQ4RDE4N2c4Q2YtSVFEOHVGbXZIdm1NbGd2XzBiVWhPSHlzOE9JczlqTEpJRS1VRUhwWVpHME12WFV5VjBJOGxPYzhpVVdnRmNiYzRLSHJMX3lFZERsaW8zQ0FwQXczUWhEcm1TdUlmekRQT3dkY1l6bVpyd0xkYkR3Y0VTaHhSTWRxQklQVXNTdmVYRGFTdUhXU1NSb19McDgzdWRKZ1pta1k0ZjdVMmQxdnhlcjlkVktrT1ZPdk44V21zTEM4RjgxMVhiT2tvWGdxNm51NXZ1amFfQkVzPXzyBolkofq8YyS1N5xg_2EzmXJT-GReLkliKCj1LbMVlw=='
+const {
+  DA2_COOKIE,
+  DA3_COOKIE,
+  DAS_COOKIE,
+  SESSION_COOKIE
+} = process.env
 
 const API_URL = 'https://api.daily.dev/graphql';
 const LAST_RUN_FILE = 'last_run.txt';
@@ -75,7 +79,7 @@ async function getNotifications(after = null) {
 const getHeaders = () => {
   return {
     'Content-Type': 'application/json',
-    'Cookie': `das=${das_cookie}; ilikecookies=true; ory_kratos_session=${session_cookie}; da2=${da2_cookie}; da3=${da3_cookie}`
+    'Cookie': `das=${DAS_COOKIE}; ilikecookies=true; ory_kratos_session=${SESSION_COOKIE}; da2=${DA2_COOKIE}; da3=${DA3_COOKIE}`
   }
 }
 
