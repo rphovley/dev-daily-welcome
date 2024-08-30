@@ -18,7 +18,7 @@ const welcomeMessages = [
   "Welcome aboard! Can't wait to see your contributions!",
   "Glad you're here! Looking forward to your insights!",
   "Welcome to our dev community! Don't hesitate to ask questions!",
-  "Awesome to have you join us! What's your favorite tech stack?"
+  "Awesome to have you join us!"
 ];
 
 const {
@@ -183,7 +183,7 @@ async function main() {
   }
 
   console.log(`Found ${newMembers.length} new members:`);
-  newMembers.forEach(member => console.log(`- ${member.username}`));
+  newMembers.reverse().forEach(member => console.log(`- ${member.username}`));
 
   rl.question('Would you like to send welcome messages to these new users? (Y/n): ', async (answer) => {
     if (answer.toLowerCase() === 'y' || answer === '') {
