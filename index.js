@@ -23,10 +23,11 @@ const welcomeMessages = [
 
 const {
   DA2_COOKIE,
-  DA3_COOKIE,
   DAS_COOKIE,
   SESSION_COOKIE
 } = process.env
+
+let DA3_COOKIE;
 
 const API_URL = 'https://api.daily.dev/graphql';
 const LAST_RUN_FILE = 'last_run.txt';
@@ -135,7 +136,16 @@ function extractUsernameFromUrl(url) {
   return match ? match[1] : null;
 }
 
+async function promptForDA3Cookie() {
+  return new Promise((resolve) => {
+    rl.question('Please enter the value for DA3_COOKIE: ', (answer) => {
+      resolve(answer.trim());
+    });
+  });
+}
+
 async function main() {
+  DA3_COOKIE = await promptForDA3Cookie();
 
   let lastRunTime;
   try {
