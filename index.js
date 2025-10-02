@@ -2,7 +2,7 @@
 
 const axios = require('axios');
 const readline = require('readline');
-const fs = require('fs');
+const fs = require('fs').promises;
 require('dotenv').config();
 
 const rl = readline.createInterface({
@@ -66,7 +66,6 @@ async function getNotifications(after = null) {
     }, {
       headers: getHeaders()
     });
-    console.log(response.data.errors)
     if(response.data.errors) {
       throw new Error(`Error fetching notifications: ${response.data.errors.map(({message})=>message).join(',')}`);
     }
@@ -104,18 +103,17 @@ async function sendWelcomeMessage(username) {
     content
   };
 
-  try {
-    const result = await axios.post(API_URL, {
-      query,
-      variables
-    }, {
-      headers: getHeaders()
-    });
-    console.log(`Welcome message sent to @${username}`);
-    console.log(result.data);
-  } catch (error) {
-    console.error(`Error sending welcome message to @${username}:`, error.message);
+  const result = await axios.post(API_URL, {
+    query,
+    variables
+  }, {
+    headers: getHeaders()
+  });
+  if(result.data.errors) {
+    throw new Error(`Error sending welcome message to @${username}: ${result.data.errors.map(({message})=>message).join(',')}`);
   }
+  console.log(`Welcome message sent to @${username}`);
+  console.log(result.data);
 }
 
 const waitToSendMessage = async (send, time) => {
@@ -130,7 +128,6 @@ const waitToSendMessage = async (send, time) => {
 const getRandomeTime = (min, max) => {
   return Math.floor(Math.random() * (max - min + 1) + min) * 1000;
 }
-
 function extractUsernameFromUrl(url) {
   const match = url.match(/%40([^+]+)\+welcome/);
   return match ? match[1] : null;
@@ -149,9 +146,10 @@ async function main() {
 
   let lastRunTime;
   try {
-    lastRunTime = fs.readFileSync(LAST_RUN_FILE, 'utf8');
+    lastRunTime = await fs.readFile(LAST_RUN_FILE, 'utf8');
   } catch (error) {
     lastRunTime = new Date(0).toISOString();
+    console.log('lastRunTime', lastRunTime)
   }
   console.log(`Last run time: ${lastRunTime}`);
   let newMembers = [];
@@ -164,7 +162,7 @@ async function main() {
 
     for (const edge of notifications.edges) {
       const notification = edge.node;
-      if (new Date(notification.createdAt) <= new Date(lastRunTime)) {
+      if (new Date(notification.createdAt) < new Date(lastRunTime)) {
         hasNextPage = false;
         break;
       }
@@ -175,7 +173,8 @@ async function main() {
         console.log(username)
         if(username) {
           newMembers.push({
-            username
+            username, 
+            notification
           });
         }
       }
@@ -193,7 +192,7 @@ async function main() {
   }
 
   console.log(`Found ${newMembers.length} new members:`);
-  newMembers.reverse().forEach(member => console.log(`- ${member.username}`));
+  newMembers.reverse().forEach(member => console.log(`- ${member.username} ${member.notification.createdAt}`));
 
   rl.question('Would you like to send welcome messages to these new users? (Y/n): ', async (answer) => {
     if (answer.toLowerCase() === 'y' || answer === '') {
@@ -201,13 +200,21 @@ async function main() {
         const timeWait = getRandomeTime(5, 10)
         console.log(member)
         console.log(`Waiting ${timeWait} seconds to send welcome message to @${member.username}`);
-        await waitToSendMessage(() => {
-          console.log(`Sending welcome message to @${member.username}`);
-          sendWelcomeMessage(member.username)
+        await waitToSendMessage(async () => {
+          try {
+            console.log(`Sending welcome message to @${member.username}`);
+            await sendWelcomeMessage(member.username)
+          } catch (error) {
+            await fs.writeFile(LAST_RUN_FILE, member.notification.createdAt);
+            console.log('Last run time updated.');
+            rl.close();
+            throw error;
+          }
         }, timeWait);
-
       }
-      fs.writeFileSync(LAST_RUN_FILE, new Date().toISOString());
+      // get last run time from the last member
+      const lastRunTime = newMembers[newMembers.length - 1].notification.createdAt;
+      await fs.writeFile(LAST_RUN_FILE, lastRunTime);
       console.log('Last run time updated.');
     }
 
